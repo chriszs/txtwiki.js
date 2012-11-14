@@ -146,8 +146,23 @@ var txtwiki = (function(){
 				}
 			}
 			
-			parsed += content[pos];
-			pos++;
+			// skip ahead
+			var priorPos = pos;
+			var commentPos = content.indexOf('<',(pos+1));
+			var tablePos = content.indexOf('{',(pos+1));
+			if (commentPos != -1 && (commentPos < tablePos || tablePos == -1))
+				pos = commentPos;
+			if (tablePos != -1 && (tablePos < commentPos || commentPos == -1))
+				pos = tablePos;
+			if (commentPos == -1 && tablePos == -1)
+				pos = content.length;
+				
+			if (priorPos != pos)
+				parsed += content.slice(priorPos,pos);
+				
+				
+			// parsed += content[pos];
+			// pos++;
 		}
 
 		endTime("firstPass",start);
@@ -178,9 +193,23 @@ var txtwiki = (function(){
 					continue;
 				}
 			}
+
+			// skip ahead
+			var priorPos = pos;
+			var refPos = content.indexOf('<',(pos+1));
+			var linkPos = content.indexOf('[',(pos+1));
+			if (refPos != -1 && (refPos < linkPos || linkPos == -1))
+				pos = refPos;
+			if (linkPos != -1 && (linkPos < refPos || refPos == -1))
+				pos = linkPos;
+			if (refPos == -1 && linkPos == -1)
+				pos = content.length;
+				
+			if (priorPos != pos)
+				parsed += content.slice(priorPos,pos);
 			
-			parsed += content[pos];
-			pos++;
+			// parsed += content[pos];
+			// pos++;
 		}
 
 		endTime("secondPass",start);

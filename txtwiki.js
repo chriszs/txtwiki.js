@@ -2,7 +2,30 @@
 
 var txtwiki = (function(){
 
+	var times = [];
+	
+	function getTimes() {
+		return times;
+	}
+	
+	function resetTimes() {
+		times = [];
+	}
+	
+	function startTime() {
+		return (new Date).getTime();
+	}
+	
+	function endTime(func,start) {
+		var diff = (new Date).getTime() - start;
+		if (times[func] == undefined)
+			times[func] = 0;
+		times[func] += diff;
+	}
+	
 	function parseWikitext(content){
+		var start = startTime();
+		
 		var parsed = "";
 
 		content = stripWhitespace(content);
@@ -23,23 +46,30 @@ var txtwiki = (function(){
 		}
 
 		parsed = stripWhitespace(parsed);
-
+		
+		endTime("parseWikitext",start);
+		
 		return parsed;
 	}
 
 	function parseSimpleTag(content, pos, start, end){
+		var start = startTime();
+		
 		if (content.slice(pos, pos + start.length) == start){
 			pos += start.length;
 			var posEnd = content.indexOf(end, pos);
 			if (posEnd == -1) {
 				posEnd = pos;
 			}
+			endTime("parseSimpleTag",start);
 			return {text: content.slice(pos, posEnd), pos: posEnd + end.length};
 		}
+		endTime("parseSimpleTag",start);
 		return {text: null, pos: pos};
 	}
 
 	function parseLink(content, pos){
+		var start = startTime();
 		if (content.slice(pos, pos + 2) == "[["){
 			var link = "";
 			pos += 2;
@@ -61,6 +91,7 @@ var txtwiki = (function(){
 			pos += 2;
 
 			var args = link.split("|");
+			endTime("parseLink",start);
 			if (args.length == 1)
 				return {text: args[0], pos: pos};
 			else {
@@ -69,26 +100,32 @@ var txtwiki = (function(){
 				return {text: args[1], pos: pos};
 			}
 		}
+		endTime("parseLink",start);
 		return {text: null, pos: pos};
 	}
 
 	function parseRef(content, pos){
+		var start = startTime();
 		if (content.slice(pos, pos + 4) == "<ref"){
 			pos += 4;
 			var text = content.slice(pos);
 			var posEnd = text.search(/<\/ref>|\/>/);
+			endTime("parseRef",start);
 			if (text.slice(posEnd, posEnd + 6) == "</ref>")
 				return {text: text.slice(0, posEnd), pos: pos + posEnd + 6};
 			else
 				return {text: text.slice(0, posEnd), pos: pos + posEnd + 2};
 		} 
+		endTime("parseRef",start);
 		return {text: null, pos: pos};
 	}
 
 	function firstPass(content){
+		var start = startTime();
 		var parsed = "";
 		var pos = 0;
 		var out;
+		
 		while (pos < content.length){
 
 			if (content[pos] == "<"){
@@ -108,21 +145,23 @@ var txtwiki = (function(){
 					continue;
 				}
 			}
-
+			
 			parsed += content[pos];
 			pos++;
 		}
 
+		endTime("firstPass",start);
 		return parsed;
 	}
-
+	
 	function secondPass(content){
+		var start = startTime();
 		var parsed = "";
 		var pos = 0;
 		var out;
 
 		while (pos < content.length){
-
+			
 			if (content[pos] == "<"){
 				out = parseRef(content, pos);
 				if (out.text != null){
@@ -139,16 +178,19 @@ var txtwiki = (function(){
 					continue;
 				}
 			}
-
+			
 			parsed += content[pos];
 			pos++;
 		}
 
+		endTime("secondPass",start);
 		return parsed;
 	}
 
+
 	// Strip bold and italic characters from paragraph. */
 	function boldItalicPass(content){
+		var start = startTime();
 		var toggle = [];
 		var countItalic = 0, countBold = 0;
 
@@ -216,11 +258,13 @@ var txtwiki = (function(){
 				parsed += content.slice(pos, content.length);
 		} else
 			parsed = content;
-
+			
+		endTime("boldItalicPass",start);
 		return parsed;
 	}
 
 	function stripWhitespace(content){
+		var start = startTime();
 		var parsed = "";
 
 		content = content.replace(/ +/g, " ");
@@ -238,11 +282,12 @@ var txtwiki = (function(){
 
 		parsed = parsed.replace(/\n\n+/g, "\n\n");
 		parsed = parsed.replace(/(^\n*|\n*$)/g, "");
-
+		
+		endTime("stripWhitespace",start);
 		return parsed;
 	}
 
-	var txtwiki = {parseWikitext : parseWikitext};
+	var txtwiki = {parseWikitext : parseWikitext, getTimes : getTimes, resetTimes : resetTimes };
 
 	if (typeof module !== 'undefined' && module.exports)
 		module.exports = txtwiki;

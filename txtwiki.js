@@ -95,6 +95,7 @@ var txtwiki = (function(){
 		if (content.slice(pos, pos + 2) == "[["){
 			var link = "";
 			pos += 2;
+			var posOrig = pos;
 			while ((pos+2) < content.length && content.slice(pos, pos + 2) != "]]"){
 				if (content.slice(pos, pos + 2) == "[["){
 					var out = parseLink(content, pos);
@@ -110,6 +111,9 @@ var txtwiki = (function(){
 					pos++;
 				}
 			}
+			if ((pos+2) >= content.length && content.slice(pos, pos + 2) != "]]")
+				return {text: "", pos: posOrig};
+				
 			pos += 2;
 
 			var args = link.split("|");

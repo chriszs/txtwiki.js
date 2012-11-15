@@ -23,6 +23,25 @@ var txtwiki = (function(){
 		times[func] += diff;
 	}
 	
+	function audit(content) {
+		if (content.indexOf("<ref") != -1 && content.search(/<\/ref>|\/>/) != -1) {
+			console.log(content);
+			throw new Error("found a ref");
+		}
+		if (content.indexOf("[[") != -1 && content.indexOf("]]") != -1) {
+			console.log(content);
+			throw new Error("found a link");
+		}
+		if (content.indexOf("<!--") != -1 && content.indexOf("-->") != -1) {
+			console.log(content);
+			throw new Error("found a comment");
+		}
+		if (content.indexOf("{|") != -1 && content.indexOf("|}") != -1) {
+			console.log(content);
+			throw new Error("found a table");
+		}
+	}
+	
 	function parseWikitext(content){
 		var start = startTime();
 		
@@ -47,13 +66,16 @@ var txtwiki = (function(){
 
 		parsed = stripWhitespace(parsed);
 		
+		//console.log(parsed);
+		audit(parsed);
+		
 		endTime("parseWikitext",start);
 		
 		return parsed;
 	}
 
 	function parseSimpleTag(content, pos, start, end){
-		var start = startTime();
+		var timerStart = startTime();
 		
 		if (content.slice(pos, pos + start.length) == start){
 			pos += start.length;
@@ -61,10 +83,10 @@ var txtwiki = (function(){
 			if (posEnd == -1) {
 				posEnd = pos;
 			}
-			endTime("parseSimpleTag",start);
+			endTime("parseSimpleTag",timerStart);
 			return {text: content.slice(pos, posEnd), pos: posEnd + end.length};
 		}
-		endTime("parseSimpleTag",start);
+		endTime("parseSimpleTag",timerStart);
 		return {text: null, pos: pos};
 	}
 

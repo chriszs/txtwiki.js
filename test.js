@@ -8,5 +8,6 @@ testrunner.run({
 		code: './txtwiki.js',
 		tests: [
 			'./test/boldItalic.js',
+			'./test/link.js'
 		]
 });
